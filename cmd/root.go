@@ -77,6 +77,7 @@ func handleConnection(tcpConn net.Conn) {
     defer tcpConn.Close()
 
     config := &ssh.ServerConfig{
+        ServerVersion: "SSH-2.0-sshcat",
         PasswordCallback: checkPassword,
         NoClientAuth: wideopen,
     }
