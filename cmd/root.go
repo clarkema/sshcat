@@ -127,6 +127,10 @@ func handleChannel(newChannel ssh.NewChannel) {
                 if len(req.Payload) == 0 {
                     req.Reply(true, nil)
                 }
+            default:
+                if req.WantReply {
+                    req.Reply(false, nil)
+                }
             }
         }
     }()
