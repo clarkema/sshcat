@@ -30,7 +30,7 @@ protect the data in flight, but that starts to become a hassle.
 SSH offers an easy way to move encrypted streams of bytes between hosts - the
 only reason not to use it for this task is the desire to avoid having to
 set up a temporary account for one of the parties on whichever machine is
-easiest to access; securing that account; and then tearing it down when the
+easiest to access; secure that account; and then tear it down when the
 transfer is complete.
 
 `sshcat` provides a dumb, temporary SSH server that has no links to any user
@@ -62,7 +62,7 @@ Alice: `ssh -T -p 2222 serverip < hugefile`
 
 **NOTE** in both cases it is important to ensure that the side _not_ sending
 data closes their `STDIN`; otherwise the connection will hang and stay open
-even after the tranfer is complete.  When receiving with `ssh` this is
+even after the transfer is complete.  When receiving with `ssh` this is
 achieved with the `-n` flag.  When receiving with `sshcat`, use `< /dev/null`
 
 ## Other uses
