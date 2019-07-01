@@ -71,6 +71,18 @@ The simplicity of sshcat means it fits well into a wider toolbox; it can also be
 combined with many other socat commands to add an ad-hoc SSH account to the
 mix.
 
+For example, suppose you want to provide a developer with live access to a
+logfile for debugging purposes, without having to give them a login to the
+machine:
+
+```
+tail -f LOGFILE | sshcat --password FOO -k
+```
+
+The developer can just run `ssh -Tn server -p 2222` to see the log in real
+time.  This example makes use of `-k` from `netcat` to allow multiple
+connections (but only one at a time.)
+
 ## Caveats and security considerations
 
  * Password are specified with the `--password` flag; these will be visible
