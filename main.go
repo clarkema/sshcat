@@ -1,7 +1,7 @@
 package main
 
 import (
-    "sshcat/cmd"
+    "github.com/clarkema/sshcat/cmd"
 )
 
 func main() {
