@@ -17,6 +17,7 @@ import (
 var port int
 var password string
 var wideopen bool
+var should_repeat bool
 
 var rootCmd = &cobra.Command{
     Use:   "sshcat",
@@ -44,9 +45,37 @@ func init() {
     rootCmd.Flags().IntVarP(&port, "port", "p", 2222, "port number to listen on")
     rootCmd.Flags().StringVar(&password, "password", "", "")
     rootCmd.Flags().BoolVar(&wideopen, "wideopen", false, "allow unauthenticated connections from anywhere")
+    rootCmd.Flags().BoolVarP(&should_repeat, "loop", "k", false, "listen for further connections")
 }
 
 func start() {
+    var accept_connections = true
+
+    listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+    if err != nil {
+        log.Fatalf("Failed to listen on port %d: %s", port, err)
+    }
+    defer listener.Close()
+
+    for accept_connections {
+        tcpConn, err := listener.Accept()
+        if err != nil {
+            log.Fatalf("Failed to accept connection (%s)", err)
+        }
+
+        if ! should_repeat {
+            listener.Close()
+        }
+
+        handleConnection(tcpConn)
+
+        accept_connections = should_repeat
+    }
+}
+
+func handleConnection(tcpConn net.Conn) {
+    defer tcpConn.Close()
+
     config := &ssh.ServerConfig{
         PasswordCallback: checkPassword,
         NoClientAuth: wideopen,
@@ -58,20 +87,6 @@ func start() {
     }
     config.AddHostKey(hostKey)
 
-    listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-    if err != nil {
-        log.Fatalf("Failed to listen on port %d: %s", port, err)
-    }
-
-    tcpConn, err := listener.Accept()
-    if err != nil {
-        log.Fatalf("Failed to accept connection (%s)", err)
-    }
-
-    // Once we have a single accepted connection, we don't want to hear about
-    // any more!
-    listener.Close()
-
     // Take our TCP connection and upgrade it to an SSH connection.  An SSH
     // connection is actually quite a complicated multiplexed thing, consisting
     // of a series of 'channels' (not to be confused with Go channels) and
@@ -79,7 +94,8 @@ func start() {
     // for us to handle, since they can arrive at any time during the session.
     _, chans, reqs, err := ssh.NewServerConn(tcpConn, config)
     if err != nil {
-        log.Fatalf("SSH handshake failed: %s", err)
+        log.Printf("SSH handshake failed: %s", err)
+        return
     }
 
     // We don't need to do anything with any SSH requests for our simple
