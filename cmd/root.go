@@ -124,14 +124,13 @@ func handleChannel(newChannel ssh.NewChannel) {
     }()
 
     // ... but then just plumb up the connection to our own STDIO.
+    pipes.Add(2)
     go func() {
-        pipes.Add(1)
         io.Copy(conn, os.Stdin)
         pipes.Done()
     }()
 
     go func() {
-        pipes.Add(1)
         io.Copy(os.Stdout, conn)
         pipes.Done()
     }()
