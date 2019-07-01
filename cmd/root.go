@@ -15,12 +15,20 @@ import (
 )
 
 var port int
+var password string
+var wideopen bool
 
 var rootCmd = &cobra.Command{
     Use:   "sshcat",
     Short: "sshcat",
     Long:  "sshcat - Ad-hoc pipe plumbing over SSH",
     Run: func(cmd *cobra.Command, args []string) {
+        if ! wideopen && len(password) == 0 {
+            log.Println("Error: must provide a password or specify `--wideopen'")
+            log.Print(cmd.UsageString())
+            os.Exit(1)
+        }
+
         start()
     },
 }
@@ -34,14 +42,14 @@ func Execute() {
 
 func init() {
     rootCmd.Flags().IntVarP(&port, "port", "p", 2222, "port number to listen on")
+    rootCmd.Flags().StringVar(&password, "password", "", "")
+    rootCmd.Flags().BoolVar(&wideopen, "wideopen", false, "allow unauthenticated connections from anywhere")
 }
 
 func start() {
-    // Disable the timestamp prefix on Go's logger
-    log.SetFlags(0)
-
     config := &ssh.ServerConfig{
-        NoClientAuth: true,
+        PasswordCallback: checkPassword,
+        NoClientAuth: wideopen,
     }
 
     hostKey, err := generateHostKey()
@@ -145,4 +153,11 @@ func generateHostKey() (ssh.Signer, error) {
         return nil, err
     }
     return ssh.NewSignerFromKey(key)
+}
+
+func checkPassword(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
+    if string(pass) == password {
+        return nil, nil
+    }
+    return nil, fmt.Errorf("Invalid password")
 }
