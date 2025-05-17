@@ -3,7 +3,7 @@ package main
 import (
     "log"
 
-    "github.com/clarkema/sshcat/cmd"
+    "git.sr.ht/~clarkema/sshcat/cmd"
 )
 
 func main() {
